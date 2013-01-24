@@ -196,7 +196,6 @@
           $(elem).css(Prop.TRANSFORM, transform.toString());
         }
       },
-
       origin: {
         get: function (elem, computed) {
           return $(elem).css(Prop.TRANSFORM_ORIGIN);
@@ -205,7 +204,6 @@
           $(elem).css(Prop.TRANSFORM_ORIGIN, [value.x + 'px', value.y + 'px'].join(' '));
         }
       },
-
       transition: {
         get: function (elem, computed) {
           return $(elem).css(Prop.TRANSITION);
@@ -227,7 +225,7 @@
             prop = v.prop === 'transform' ? Prop.TRANSFORM : v.prop;
             duration = v.duration;
             easing = v.easing;
-            if ($.isObject(easing)) {
+            if (typeof easing === 'object') {
               easing = easing[prop];
             }
             if (TRANSITION_TIMING_FUNCTIONS[easing] != null) {
@@ -280,7 +278,6 @@
           return this;
         }
 
-//          css.transition = transitions;
         // CSS 適用直後に animate3 を叩くケースに対応するために、
         // Transition の適用は次のイベントサイクルに持ち越す。
         setTimeout(function () {
@@ -454,32 +451,32 @@
 
   })();
 
-  (function () {
-    $.fn.extend({
-      animate3          : function (props, duration, easing, callback) {
-        $.fn.animate.call(this, props, duration * 1000, easing, callback);
-      },
-      stop3             : function (clearQueue, jumpToEnd) {
-        $.fn.stop.call(this, clearQueue, jumpToEnd);
-      },
-      slideUp3          : function (duration, callback) {
-        $.fn.slideUp.call(this, duration * 1000, callback)
-      },
-      slideDown3        : function (duration, callback) {
-        $.fn.slideDown.call(this, duration * 1000, callback)
-      },
-      fadeIn3           : function (duration, callback) {
-        $.fn.fadeIn.call(this, duration * 1000, callback)
-      },
-      fadeOut3          : function (duration, callback) {
-        $.fn.fadeOut.call(this, duration * 1000, callback)
-      },
-      animate3Deferred  : $.fn.animateDeferred,
-      slideUp3Deferred  : $.fn.slideUpDeferred,
-      slideDown3Deferred: $.fn.slideDownDeferred,
-      fadeIn3Deferred   : $.fn.fadeInDeferred,
-      fadeOut3Deferred  : $.fn.fadeOutDeferred
-    });
-  })();
+//  (function () {
+//    $.fn.extend({
+//      animate3          : function (props, duration, easing, callback) {
+//        $.fn.animate.call(this, props, duration * 1000, easing, callback);
+//      },
+//      stop3             : function (clearQueue, jumpToEnd) {
+//        $.fn.stop.call(this, clearQueue, jumpToEnd);
+//      },
+//      slideUp3          : function (duration, callback) {
+//        $.fn.slideUp.call(this, duration * 1000, callback)
+//      },
+//      slideDown3        : function (duration, callback) {
+//        $.fn.slideDown.call(this, duration * 1000, callback)
+//      },
+//      fadeIn3           : function (duration, callback) {
+//        $.fn.fadeIn.call(this, duration * 1000, callback)
+//      },
+//      fadeOut3          : function (duration, callback) {
+//        $.fn.fadeOut.call(this, duration * 1000, callback)
+//      },
+//      animate3Deferred  : $.fn.animateDeferred,
+//      slideUp3Deferred  : $.fn.slideUpDeferred,
+//      slideDown3Deferred: $.fn.slideDownDeferred,
+//      fadeIn3Deferred   : $.fn.fadeInDeferred,
+//      fadeOut3Deferred  : $.fn.fadeOutDeferred
+//    });
+//  })();
 
 })(window, document, jQuery);
