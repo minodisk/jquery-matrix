@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>test CSS transform</title>
+
+  <style>
+    .container {
+      border        : 1px solid #000000;
+      width         : 300px;
+      height        : 200px;
+      position      : relative;
+      margin-bottom : 80px;
+
+      font          : 13px monospace;
+      white-space   : pre;
+    }
+
+    .box {
+      -moz-box-sizing : border-box;
+      box-sizing      : border-box;
+      width           : 300px;
+      height          : 200px;
+
+      position        : absolute;
+      top             : 0;
+      left            : 0;
+    }
+
+    .box p {
+      margin  : 0;
+      padding : 5px 10px;
+      color   : #ffffff;
+    }
+
+    .webkit {
+      border : 3px solid #5f9ea0;
+    }
+
+    .webkit p {
+      background    : #5f9ea0;
+      border-radius : 5px 0 0 0;
+
+      position      : absolute;
+      right         : 0;
+      bottom        : 0;
+    }
+
+    .tm {
+      border : 3px double #8b0000;
+    }
+
+    .tm p {
+      background    : #8b0000;
+      border-radius : 0 5px 0 0;
+
+      position      : absolute;
+      left          : 0;
+      bottom        : 0;
+    }
+  </style>
+
+  <script src="jquery-1.8.3.min.js"></script>
+  <script src="../src/jquery.tm.core.js"></script>
+  <script>
+
+    $(function () {
+
+      $('.container').each(function () {
+        var $container = $(this)
+          , $webkit = $container.find('.webkit')
+          , $original = $container.find('.original')
+          , transform = {}
+          ;
+
+        $.each($container.text().split(/[\r\n]/), function (i, str) {
+
+          var kv = str.split(':')
+            , key, tmp, v, value, i, len
+            ;
+          if (kv == null || kv.length !== 2) {
+            return;
+          }
+          tmp = kv[1].split(/\s+/);
+          value = [];
+          for (i = 0, len = tmp.length; i < len; i++) {
+            v = parseFloat(tmp[i]);
+            if (!isNaN(v)) {
+              value.push(v);
+            }
+          }
+          key = kv[0].replace(/\s+/, '');
+          if (value.length === 1) {
+            transform[key] = value[0];
+          } else {
+            transform[key] = value;
+          }
+
+        });
+
+        if (window.WebKitCSSMatrix) {
+          var matrix = new WebKitCSSMatrix()
+            .translate(
+              transform.x != null ? transform.x : 0,
+              transform.y != null ? transform.y : 0,
+              transform.z != null ? transform.z : 0
+            )
+            .scale(
+              transform.scaleX != null ? transform.scaleX : transform.scale != null ? transform.scale : 1,
+              transform.scaleY != null ? transform.scaleY : transform.scale != null ? transform.scale : 1,
+              transform.scaleZ != null ? transform.scaleZ : 1
+            )
+            .rotate(
+              transform.rotationX != null ? transform.rotationX : 0,
+              transform.rotationY != null ? transform.rotationY : 0,
+              transform.rotationZ != null ? transform.rotationZ : transform.rotation != null ? transform.rotation : 0
+            )
+            .skewX(
+              transform.skewX != null ? transform.skewX : 0
+            )
+            .skewY(
+              transform.skewY != null ? transform.skewY : 0
+            );
+
+          if (transform.rotateAxisAngle != null) {
+            matrix = WebKitCSSMatrix.prototype.rotateAxisAngle.apply(matrix, transform.rotateAxisAngle);
+          }
+
+          $webkit[0].style['-webkit-transform'] = [
+            'perspective(' + (transform.perspective != null ? transform.perspective : 0) + ')',
+            matrix.toString()
+          ].join(' ');
+        }
+
+        $original.css({
+          transform: transform
+        });
+
+      });
+
+    });
+
+  </script>
+
+</head>
+<body>
+
+<h1>transform</h1>
+
+<div class="container">
+  perspective: 500
+  x: 50
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  y: 50
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  z: 50
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  scale: 0.5
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  scaleX: 0.5
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  scaleY: 0.5
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  scaleZ: 0.5
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  rotation: 30
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  rotationX: 30
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 0
+  rotationX: 30
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  rotationY: 30
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  rotationZ: 30
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  z: -300
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  skewX: 15
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container">
+  perspective: 500
+  skewY: 15
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+<div class="container" id="rotateAxisAngle">
+  perspective: 500
+  rotateAxisAngle: 1 1 1 30
+  <div class="webkit box"><p>WebKitCSSMatrix</p></div>
+  <div class="tm box"><p>$.CSSMatrix</p></div>
+</div>
+
+</body>
+</html>
