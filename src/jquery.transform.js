@@ -59,6 +59,7 @@
         var KEYS = ['x', 'y', 'z', 'scaleX', 'scaleY', 'scaleZ', 'rotationX', 'rotationY', 'rotationZ']
           , construct = function () {
             this.interpolate = interpolate;
+            this.merge = merge;
             this.toString = toString;
             return this;
           }
@@ -69,6 +70,33 @@
             while (i--) {
               key = KEYS[i];
               this[key] += (transform[key] - this[key]) * ratio;
+            }
+            return this;
+          }
+          , merge = function (transform) {
+            var index, from, to, delta
+              ;
+            var i = KEYS.length
+              , key
+              ;
+            while (i--) {
+              key = KEYS[i];
+              if (transform.hasOwnProperty(key)) {
+                if (i >= 6) {
+                  from = this[key];
+                  to = transform[key];
+                  delta = to - from;
+                  while (delta < -180) {
+                    delta += 360;
+                  }
+                  while (delta > 180) {
+                    delta -= 360;
+                  }
+                  this[key] = from + delta;
+                } else {
+                  this[key] = transform[key];
+                }
+              }
             }
             return this;
           }
@@ -169,11 +197,98 @@
 //        }
 //        return matrix;
 //      }
+      , getTransition = function (elem) {
+        var transition = $._data(elem, 'transition')
+          ;
+        return transition;
+      }
+      , getTransform = function (elem) {
+        var transform = $._data(elem, 'transform')
+          ;
+        if (transform != null) {
+          return transform;
+        }
+        transform = Transform();
+        $._data(elem, 'transform', transform);
+        return transform;
+      }
+      , updateTransform = function (elem, transform) {
+        $(elem).css(Prop.TRANSFORM, transform.toString());
+      }
       ;
 
     // hook CSS3
     $.extend($.cssHooks, {
-      transform: {
+      x         : {
+        get: function (elem, computed) {
+          var transform = getTransform(elem)
+            ;
+          return;
+        },
+        set: function (elem, value) {
+          var transform = getTransform(elem)
+            ;
+          transform.x = value;
+          updateTransform(elem, transform);
+        }
+      },
+      y         : {
+        get: function (elem, computed) {
+          return;
+        },
+        set: function (elem, value) {
+        }
+      },
+      z         : {
+        get: function (elem, computed) {
+          return;
+        },
+        set: function (elem, value) {
+        }
+      },
+      scaleX    : {
+        get: function (elem, computed) {
+          return;
+        },
+        set: function (elem, value) {
+        }
+      },
+      scaleY    : {
+        get: function (elem, computed) {
+          return;
+        },
+        set: function (elem, value) {
+        }
+      },
+      scaleZ    : {
+        get: function (elem, computed) {
+          return;
+        },
+        set: function (elem, value) {
+        }
+      },
+      rotateX   : {
+        get: function (elem, computed) {
+          return;
+        },
+        set: function (elem, value) {
+        }
+      },
+      rotateY   : {
+        get: function (elem, computed) {
+          return;
+        },
+        set: function (elem, value) {
+        }
+      },
+      rotateZ   : {
+        get: function (elem, computed) {
+          return;
+        },
+        set: function (elem, value) {
+        }
+      },
+      transform : {
         get: function (elem, computed) {
           var transform = $._data(elem, 'transform')
             ;
@@ -196,7 +311,7 @@
           $(elem).css(Prop.TRANSFORM, transform.toString());
         }
       },
-      origin: {
+      origin    : {
         get: function (elem, computed) {
           return $(elem).css(Prop.TRANSFORM_ORIGIN);
         },
@@ -241,90 +356,118 @@
     // animation methods
     $.fn.extend({
       animate3          : function (props, duration, easing, callback) {
-        var self = this
-          , $dummy = $('<div>')
-            .css({
-              visibility: 'hidden',
-              overflow  : 'hidden',
-              width     : 0,
-              height    : 0
-            })
-            .appendTo('body')
-          , transitions = []
-          , from = $(this).css('transform')
-          , to = $.extend(Transform(from), props.transform)
-          , prop
-          ;
+        return this.each(function () {
+          var $self = $(this)
+            , $dummy = $('<div>')
+              .css({
+                visibility: 'hidden',
+                overflow  : 'hidden',
+                width     : 0,
+                height    : 0
+              })
+              .appendTo('body')
+            , transitions = []
+            , from = $(this).css('transform')
+            , to = Transform(from).merge(props.transform)
+            , prop
+            ;
 
-        $._data(self, 'animate3', {
-          $dummy: $dummy,
-          from  : from,
-          to    : to
-        });
+          $._data(this, 'animate3', {
+            $dummy: $dummy,
+            from  : from,
+            to    : to
+          });
 
-        for (prop in props) {
-          if (props.hasOwnProperty(prop)) {
-            transitions.push({
-              prop    : prop,
-              duration: duration,
-              easing  : easing
-            });
-          }
-        }
-        if (transitions.length === 0) {
-          setTimeout(function () {
-            callback();
-          }, 0);
-          return this;
-        }
-
-        // CSS 適用直後に animate3 を叩くケースに対応するために、
-        // Transition の適用は次のイベントサイクルに持ち越す。
-        setTimeout(function () {
-          // ダミー要素にイベントを貼ることで複数のTransitionに対応する。
-          $dummy
-            .css({
-              transition: {
-                prop    : '-webkit-transform',
+          for (prop in props) {
+            if (props.hasOwnProperty(prop)) {
+              transitions.push({
+                prop    : prop,
                 duration: duration,
                 easing  : easing
-              },
-              transform : 'matrix(1, 0, 0, 1, 1, 0)'
-            })
-            .one(Event.TRANSITION_END, function () {
-              self.css('transition', '');
-              if (callback != null) {
-                callback();
-              }
-            });
-          self
-            .css({
-              transform : to,
-              transition: transitions
-            })
-        }, 0);
+              });
+            }
+          }
+          if (transitions.length === 0) {
+            setTimeout(function () {
+              callback();
+            }, 0);
+            return;
+          }
 
-        return this;
+          // CSS 適用直後に animate3 を叩くケースに対応するために、
+          // Transition の適用は次のイベントサイクルに持ち越す。
+          setTimeout(function () {
+            // ダミー要素にイベントを貼ることで　//複数のTransitionに対応する。
+            // はじめから目標値に設定されていた場合はtransitionEndがtriggerされない
+            // 問題に対応する。
+            $dummy
+              .css({
+                transition: {
+                  prop    : '-webkit-transform',
+                  duration: duration,
+                  easing  : easing
+                },
+                transform : 'matrix(1, 0, 0, 1, 1, 0)'
+              })
+              .one(Event.TRANSITION_END, function () {
+                $self.css('transition', '');
+                if (callback != null) {
+                  callback();
+                }
+              });
+            $self
+              .css({
+                transform : to,
+                transition: transitions
+              })
+          }, 0);
+        });
       },
       stop3             : function () {
-        var animate3 = $._data(this, 'animate3')
-          , matrix, transform
-          ;
-        if (animate3 == null) {
-          return this;
-        }
-        matrix = animate3.$dummy.css(Prop.TRANSFORM);
-        matrix = matrix.substring(7, matrix.length - 1).split(',');
-        transform = animate3.from.interpolate(animate3.to, +matrix[4]);
-        animate3.$dummy.css('transition', '');
-        this
-          .css({
-            transition: '',
-            // Android 2.2 で表示に不具合
-            transform : transform
-          });
-        animate3.$dummy.remove();
-        return this;
+        this.each(function () {
+          var $self = $(this)
+            , animate3 = $._data(this, 'animate3')
+            , matrix, transform
+            ;
+          if (animate3 == null) {
+            return;
+          }
+
+          console.log(
+            new WebKitCSSMatrix()
+              .rotate(animate3.from.rotationX, animate3.from.rotationY, animate3.from.rotationZ)
+              .translate(animate3.from.x, animate3.from.y, animate3.from.z)
+              .scale(animate3.from.scaleX, animate3.from.scaleY, animate3.from.scaleZ)
+              .toString()
+          );
+          console.log(
+            new WebKitCSSMatrix()
+              .rotate(animate3.to.rotationX, animate3.to.rotationY, animate3.to.rotationZ)
+              .translate(animate3.to.x, animate3.to.y, animate3.to.z)
+              .scale(animate3.to.scaleX, animate3.to.scaleY, animate3.to.scaleZ)
+              .toString()
+          );
+
+          matrix = animate3.$dummy.css(Prop.TRANSFORM);
+          matrix = matrix.substring(7, matrix.length - 1).split(',');
+          transform = animate3.from.interpolate(animate3.to, +matrix[4]);
+          console.log(transform.rotationX, transform.rotationY, transform.rotationZ);
+          console.log(
+            new WebKitCSSMatrix()
+              .rotate(transform.rotationX, transform.rotationY, transform.rotationZ)
+//              .translate(transform.x, transform.y, transform.z)
+//              .scale(transform.scaleX, transform.scaleY, transform.scaleZ)
+              .toString()
+          );
+          animate3.$dummy.css('transition', '');
+          $self
+            .css({
+              transition: '',
+              // Android 2.2 で表示に不具合
+              transform : transform
+            });
+          animate3.$dummy.remove();
+        });
       },
       slideUp3          : function (duration, callback) {
         var self = this
