@@ -10,8 +10,8 @@
       width         : 300px;
       height        : 200px;
       position      : absolute;
-      top: 200px;
-      left: 200px;
+      top           : 200px;
+      left          : 200px;
       margin-bottom : 80px;
 
       font          : 13px monospace;
@@ -42,13 +42,13 @@
     (function () {
 
       var RANGES = {
-//          x        : [-100, 100],
-//          y        : [-100, 100],
-//          z        : [-100, 100],
-//          scaleX   : [1, 2],
-//          scaleY   : [1, 2],
-//          scaleZ   : [1, 2],
-//          rotationX: [-360, 360],
+          x        : [-100, 100],
+          y        : [-100, 100],
+          z        : [-100, 100],
+          scaleX   : [-2, 2],
+          scaleY   : [-2, 2],
+          scaleZ   : [-2, 2],
+          rotationX: [-360, 360],
           rotationY: [-360, 360],
           rotationZ: [-360, 360]
         }
@@ -69,16 +69,20 @@
         }
         ;
 
-      $(document)
-        .on('ready', function () {
-          $container = $('.container');
-          $box = $container.find('.box')
-            .css({
-              transform: {
-                perspective: 500
-              }
-            });
-          setInterval(stopAndAnimate, 1000);
+      $(window)
+        .on('load', function () {
+          setTimeout(function () {
+
+            $container = $('.container');
+            $box = $container.find('.box')
+              .css({
+                transform: {
+                  perspective: 500
+                }
+              });
+            setInterval(stopAndAnimate, 1000);
+
+          }, 1000);
         });
 
     })();

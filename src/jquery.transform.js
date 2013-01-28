@@ -63,15 +63,16 @@
             this.toString = toString;
             return this;
           }
-          , interpolate = function (transform, ratio) {
-            var i = KEYS.length
+          , interpolate = function (t1, t2, ratio) {
+            var t = Transform()
+              , i = KEYS.length
               , key
               ;
             while (i--) {
               key = KEYS[i];
-              this[key] += (transform[key] - this[key]) * ratio;
+              t[key] += (t2[key] - t1[key]) * ratio;
             }
-            return this;
+            return t;
           }
           , merge = function (transform) {
             var index, from, to, delta
@@ -427,44 +428,40 @@
         this.each(function () {
           var $self = $(this)
             , animate3 = $._data(this, 'animate3')
-            , matrix, transform
+            , matrix, ratio, transform
             ;
           if (animate3 == null) {
             return;
           }
 
-          console.log(
-            new WebKitCSSMatrix()
-              .rotate(animate3.from.rotationX, animate3.from.rotationY, animate3.from.rotationZ)
-              .translate(animate3.from.x, animate3.from.y, animate3.from.z)
-              .scale(animate3.from.scaleX, animate3.from.scaleY, animate3.from.scaleZ)
-              .toString()
-          );
-          console.log(
-            new WebKitCSSMatrix()
-              .rotate(animate3.to.rotationX, animate3.to.rotationY, animate3.to.rotationZ)
-              .translate(animate3.to.x, animate3.to.y, animate3.to.z)
-              .scale(animate3.to.scaleX, animate3.to.scaleY, animate3.to.scaleZ)
-              .toString()
-          );
 
           matrix = animate3.$dummy.css(Prop.TRANSFORM);
           matrix = matrix.substring(7, matrix.length - 1).split(',');
-          transform = animate3.from.interpolate(animate3.to, +matrix[4]);
-          console.log(transform.rotationX, transform.rotationY, transform.rotationZ);
-          console.log(
-            new WebKitCSSMatrix()
-              .rotate(transform.rotationX, transform.rotationY, transform.rotationZ)
-//              .translate(transform.x, transform.y, transform.z)
-//              .scale(transform.scaleX, transform.scaleY, transform.scaleZ)
-              .toString()
-          );
+          ratio = +matrix[4];
+//          transform = animate3.from.interpolate(animate3.to, ratio);
+
+          var fromMatrix = new Matrix()
+            .rotate(animate3.from.rotationX, animate3.from.rotationY, animate3.from.rotationZ)
+            .translate(animate3.from.x, animate3.from.y, animate3.from.z)
+            .scale(animate3.from.scaleX, animate3.from.scaleY, animate3.from.scaleZ);
+//          var fromQuat = Quaternion.createFromRotationMatrix(fromMatrix);
+          var toMatrix = new Matrix()
+            .rotate(animate3.to.rotationX, animate3.to.rotationY, animate3.to.rotationZ)
+            .translate(animate3.to.x, animate3.to.y, animate3.to.z)
+            .scale(animate3.to.scaleX, animate3.to.scaleY, animate3.to.scaleZ);
+//          var toQuat = Quaternion.createFromRotationMatrix(toMatrix);
+//          console.log(animate3.from, animate3.to, ratio);
+//          var slerpQuat = Quaternion.slerp(fromQuat, toQuat, ratio);
+//          var matrix = slerpQuat.toMatrix();
+//          fromMatrix.concat(matrix);
+//          console.log(fromMatrix.toString(), Matrix.slerp(fromMatrix, toMatrix, ratio));
+          console.log(Matrix.slerp(fromMatrix, toMatrix, ratio));
+
           animate3.$dummy.css('transition', '');
           $self
             .css({
               transition: '',
-              // Android 2.2 で表示に不具合
-              transform : transform
+              transform : Matrix.slerp(fromMatrix, toMatrix, ratio).toString()
             });
           animate3.$dummy.remove();
         });
