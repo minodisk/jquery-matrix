@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>stop3</title>
+  <title>Stop Translate</title>
   <meta name="viewport" width="devide-width">
 
   <style>
@@ -41,8 +41,6 @@
   </style>
 
   <script src="jquery-1.8.3.min.js"></script>
-  <script src="../src/matrix.js"></script>
-  <script src="../src/quaternion.js"></script>
   <script src="../src/jquery.transform.js"></script>
   <script>
 
@@ -57,7 +55,13 @@
           $box = $container.find('.box')
             .css({
               transform: {
-                perspective: 500
+                perspective: 500,
+                scaleX:2,
+                scaleY:-1,
+                scaleZ:3,
+                rotationX: 10,
+                rotationY: 10,
+                rotationZ: 10
               }
             });
 
@@ -65,8 +69,9 @@
             $box.
               animate3({
                 transform: {
-                  rotationX: 120,
-                  rotationY: 270
+                  x: 120,
+                  y: -30,
+                  z: 300
                 }
               }, 2, 'linear');
             setTimeout(function () {
@@ -93,7 +98,7 @@
 </head>
 <body>
 
-<h1>transition</h1>
+<h1>Stop Translate</h1>
 
 <div class="container">
   <div class="box stop3">$.fn.stop3</div>

@@ -168,36 +168,6 @@
           ));
         };
       })()
-//      , matrix = function ($elem) {
-//        var transform = $elem.css(Prop.TRANSFORM)
-//          , matrix, i
-//          ;
-//        if (transform.indexOf('matrix3d(') === 0) {
-//          matrix = transform.substring(9, transform.length - 1).split(',');
-//        } else if (transform.indexOf('matrix(') === 0) {
-//          matrix = transform.substring(7, transform.length - 1).split(',');
-//          matrix = [
-//            matrix[0], matrix[1], 0, 0,
-//            matrix[2], matrix[3], 0, 0,
-//            0, 0, 1, 0,
-//            matrix[4], matrix[5], 0, 1
-//          ];
-//        } else {
-//          matrix = [
-//            1, 0, 0, 0,
-//            0, 1, 0, 0,
-//            0, 0, 1, 0,
-//            0, 0, 0, 1
-//          ];
-//        }
-//        i = matrix.length;
-//        while (i--) {
-//          matrix[i] = +matrix[i];
-//        }
-//        if (matrix.length === 6) {
-//        }
-//        return matrix;
-//      }
       , getTransition = function (elem) {
         var transition = $._data(elem, 'transition')
           ;
@@ -301,11 +271,11 @@
           return transform;
         },
         set: function (elem, value) {
-          if (typeof value === 'string') {
-            //TODO Transformオブジェクトに変更して格納が必要
-            $(elem).css(Prop.TRANSFORM, value);
-            return;
-          }
+//          if (typeof value === 'string') {
+//            //TODO Transformオブジェクトに変更して格納が必要
+//            $(elem).css(Prop.TRANSFORM, value);
+//            return;
+//          }
           var transform = Transform(value)
             ;
           $._data(elem, 'transform', transform);
@@ -353,6 +323,145 @@
         }
       }
     });
+
+
+    Matrix.createFromElem = function ($elem) {
+      var transform = $elem.css(Prop.TRANSFORM)
+        , arr, i
+        ;
+      if (transform.indexOf('matrix3d(') === 0) {
+        arr = transform.substring(9, transform.length - 1).split(',');
+      } else if (transform.indexOf('matrix(') === 0) {
+        arr = transform.substring(7, transform.length - 1).split(',');
+      } else {
+        return new Matrix(
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1, 0,
+          0, 0, 0, 1
+        );
+      }
+      i = arr.length;
+      while (i--) {
+        arr[i] = +arr[i];
+      }
+      if (arr.length === 16) {
+        return Matrix(arr);
+      }
+      return new Matrix(
+        arr[0], arr[1], 0, 0,
+        arr[2], arr[3], 0, 0,
+        0, 0, 1, 0,
+        arr[4], arr[5], 0, 1
+      );
+    };
+
+    function Matrix(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) {
+      if (!(this instanceof Matrix)) {
+        return new Matrix(
+          m11[0],m11[1],m11[2],m11[3],
+          m11[4],m11[5],m11[6],m11[7],
+          m11[8],m11[9],m11[10],m11[11],
+          m11[12],m11[13],m11[14],m11[15]
+        );
+      }
+      this.m11 = m11;
+      this.m12 = m12;
+      this.m13 = m13;
+      this.m14 = m14;
+      this.m21 = m21;
+      this.m22 = m22;
+      this.m23 = m23;
+      this.m24 = m24;
+      this.m31 = m31;
+      this.m32 = m32;
+      this.m33 = m33;
+      this.m34 = m34;
+      this.m41 = m41;
+      this.m42 = m42;
+      this.m43 = m43;
+      this.m44 = m44;
+    }
+
+    Matrix.prototype.concat = function (_m11, _m12, _m13, _m14, _m21, _m22, _m23, _m24, _m31, _m32, _m33, _m34, _m41, _m42, _m43, _m44) {
+      if (_m11 instanceof Matrix) {
+        var matrix = _m11
+          ;
+        _m11 = matrix.m11;
+        _m12 = matrix.m12;
+        _m13 = matrix.m13;
+        _m14 = matrix.m14;
+        _m21 = matrix.m21;
+        _m22 = matrix.m22;
+        _m23 = matrix.m23;
+        _m24 = matrix.m24;
+        _m31 = matrix.m31;
+        _m32 = matrix.m32;
+        _m33 = matrix.m33;
+        _m34 = matrix.m34;
+        _m41 = matrix.m41;
+        _m42 = matrix.m42;
+        _m43 = matrix.m43;
+        _m44 = matrix.m44;
+      }
+      var m11 = this.m11, m12 = this.m12, m13 = this.m13, m14 = this.m14
+        , m21 = this.m21, m22 = this.m22, m23 = this.m23, m24 = this.m24
+        , m31 = this.m31, m32 = this.m32, m33 = this.m33, m34 = this.m34
+        , m41 = this.m41, m42 = this.m42, m43 = this.m43, m44 = this.m44
+        ;
+      this.m11 = m11 * _m11 + m21 * _m12 + m31 * _m13 + m41 * _m14;
+      this.m12 = m12 * _m11 + m22 * _m12 + m32 * _m13 + m42 * _m14;
+      this.m13 = m13 * _m11 + m23 * _m12 + m33 * _m13 + m43 * _m14;
+      this.m14 = m14 * _m11 + m24 * _m12 + m34 * _m13 + m44 * _m14;
+      this.m21 = m11 * _m21 + m21 * _m22 + m31 * _m23 + m41 * _m24;
+      this.m22 = m12 * _m21 + m22 * _m22 + m32 * _m23 + m42 * _m24;
+      this.m23 = m13 * _m21 + m23 * _m22 + m33 * _m23 + m43 * _m24;
+      this.m24 = m14 * _m21 + m24 * _m22 + m34 * _m23 + m44 * _m24;
+      this.m31 = m11 * _m31 + m21 * _m32 + m31 * _m33 + m41 * _m34;
+      this.m32 = m12 * _m31 + m22 * _m32 + m32 * _m33 + m42 * _m34;
+      this.m33 = m13 * _m31 + m23 * _m32 + m33 * _m33 + m43 * _m34;
+      this.m34 = m14 * _m31 + m24 * _m32 + m34 * _m33 + m44 * _m34;
+      this.m41 = m11 * _m41 + m21 * _m42 + m31 * _m43 + m41 * _m44;
+      this.m42 = m12 * _m41 + m22 * _m42 + m32 * _m43 + m42 * _m44;
+      this.m43 = m13 * _m41 + m23 * _m42 + m33 * _m43 + m43 * _m44;
+      this.m44 = m14 * _m41 + m24 * _m42 + m34 * _m43 + m44 * _m44;
+      return this;
+    };
+
+    Matrix.prototype.scale = function (scaleX, scaleY, scaleZ) {
+      scaleX = scaleX != null ? scaleX : 1;
+      scaleY = scaleY != null ? scaleY : scaleX;
+      scaleZ = scaleZ != null ? scaleZ : 1;
+      return this.concat(
+        scaleX, 0, 0, 0,
+        0, scaleY, 0, 0,
+        0, 0, scaleZ, 0,
+        0, 0, 0, 1
+      );
+    };
+
+    Matrix.prototype.getEulers = function () {
+      var xx = this.m11, xy = this.m12, xz = this.m13
+        , yx = this.m21, yy = this.m22, yz = this.m23
+        , zx = this.m31, zy = this.m32, zz = this.m33
+        ;
+      var c = Math.atan2(zy, zz)
+        , b = -Math.asin(zx)
+        , a = Math.asin(yx / Math.cos(b))
+        ;
+      if (xx < 0) a = Math.PI - a;
+      if (Math.abs(Math.cos(b)) < 1e-6) {
+        c = Math.atan2(yz, yy);
+        b = -Math.asin(zx);
+        a = 0;
+      }
+      var z = a
+        , y = b
+        , x = c
+        ;
+      return [x * 180 / Math.PI, y * 180 / Math.PI, z * 180 / Math.PI];
+    };
+
 
     // animation methods
     $.fn.extend({
@@ -425,43 +534,39 @@
         });
       },
       stop3             : function () {
-        this.each(function () {
+        return this.each(function () {
           var $self = $(this)
             , animate3 = $._data(this, 'animate3')
-            , matrix, ratio, transform
+            , transform = $._data(this, 'transform')
             ;
           if (animate3 == null) {
             return;
           }
 
-
-          matrix = animate3.$dummy.css(Prop.TRANSFORM);
-          matrix = matrix.substring(7, matrix.length - 1).split(',');
-          ratio = +matrix[4];
-//          transform = animate3.from.interpolate(animate3.to, ratio);
-
-          var fromMatrix = new Matrix()
-            .rotate(animate3.from.rotationX, animate3.from.rotationY, animate3.from.rotationZ)
-            .translate(animate3.from.x, animate3.from.y, animate3.from.z)
-            .scale(animate3.from.scaleX, animate3.from.scaleY, animate3.from.scaleZ);
-//          var fromQuat = Quaternion.createFromRotationMatrix(fromMatrix);
-          var toMatrix = new Matrix()
-            .rotate(animate3.to.rotationX, animate3.to.rotationY, animate3.to.rotationZ)
-            .translate(animate3.to.x, animate3.to.y, animate3.to.z)
-            .scale(animate3.to.scaleX, animate3.to.scaleY, animate3.to.scaleZ);
-//          var toQuat = Quaternion.createFromRotationMatrix(toMatrix);
-//          console.log(animate3.from, animate3.to, ratio);
-//          var slerpQuat = Quaternion.slerp(fromQuat, toQuat, ratio);
-//          var matrix = slerpQuat.toMatrix();
-//          fromMatrix.concat(matrix);
-//          console.log(fromMatrix.toString(), Matrix.slerp(fromMatrix, toMatrix, ratio));
-          console.log(Matrix.slerp(fromMatrix, toMatrix, ratio));
+          var matrix = Matrix.createFromElem($self)
+            , eulers
+            , size = function (vector) {
+              return Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+            }
+            ;
+          console.log(matrix);
+          transform.x = matrix.m41;
+          transform.y = matrix.m42;
+          transform.z = matrix.m43;
+          transform.scaleX = size([matrix.m11, matrix.m21, matrix.m31]);
+          transform.scaleY = size([matrix.m12, matrix.m22, matrix.m32]);
+          transform.scaleZ = size([matrix.m13, matrix.m23, matrix.m33]);
+          matrix.scale(1/transform.scaleX, 1/transform.scaleY, 1/transform.scaleZ);
+          eulers = matrix.getEulers();
+          transform.rotationX = eulers[0];
+          transform.rotationY = eulers[1];
+          transform.rotationZ = eulers[2];
 
           animate3.$dummy.css('transition', '');
           $self
             .css({
               transition: '',
-              transform : Matrix.slerp(fromMatrix, toMatrix, ratio).toString()
+              transform : transform//$self.css(Prop.TRANSFORM)
             });
           animate3.$dummy.remove();
         });
