@@ -45,9 +45,9 @@
           x        : [-100, 100],
           y        : [-100, 100],
           z        : [-100, 100],
-          scaleX   : [-2, 2],
-          scaleY   : [-2, 2],
-          scaleZ   : [-2, 2],
+//          scaleX   : [-2, 2],
+//          scaleY   : [-2, 2],
+//          scaleZ   : [-2, 2],
           rotationX: [-360, 360],
           rotationY: [-360, 360],
           rotationZ: [-360, 360]
@@ -56,13 +56,18 @@
 
         , $container, $box
 
+        , between = function (a, b) {
+          var t = Math.random()
+            ;
+          return t * a + (1 - t) * b;
+        }
         , stopAndAnimate = function () {
           var transform = {}
             , prop = PROPS[PROPS.length * Math.random() >> 0]
             , range = RANGES[prop]
             ;
 
-          transform[prop] = (range[1] - range[0]) * Math.random() + range[0];
+          transform[prop] = between.apply(null, range);
           $box
             .stop3()
             .animate3({transform: transform}, 2, 'easeOutQuad');
