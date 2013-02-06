@@ -74,11 +74,10 @@
    * @param {Number|Vector3} [x=0] Specifies the x-coordinate or the vector to be copied.
    * @param {Number} [y=0]         Specifies the y-coordinate.
    * @param {Number} [z=0]         Specifies the z-coordinate.
-   * @return {Vector}
    * @constructor
    */
   function Vector3(x, y, z) {
-    var v = x
+    var v
       ;
 
     // type coercion
@@ -91,6 +90,7 @@
 
     // clone
     if (x instanceof Vector3) {
+      v = x;
       x = v.x;
       y = v.y;
       z = v.z;
@@ -110,8 +110,29 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-// We provide a global zero vector constant
+  /**
+   * The zero vector.
+   * @type {Vector3}
+   */
   Vector3.kZeroVector = new Vector3(0, 0, 0);
+
+  /**
+   * The x unit vector.
+   * @type {Vector3}
+   */
+  Vector3.kRightVector = new Vector3(1, 0, 0);
+
+  /**
+   * The y unit vector.
+   * @type {Vector3}
+   */
+  Vector3.kUpVector = new Vector3(0, 1, 0);
+
+  /**
+   * The z unit vector.
+   * @type {Vector3}
+   */
+  Vector3.kForwardVector = new Vector3(0, 0, 1);
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -120,76 +141,44 @@
 /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Compute the magnitude of a vector
-   * @param {Vector3} a
-   * @return {Number}
-   */
-  Vector3.vectorMag = function (a) {
-    return sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
-  };
-
-  /**
-   * Compute the cross product of two vectors
-   * @param {Vector3} a
-   * @param {Vector3} b
-   * @return {Vector3}
+   * Computes the crossproduct of two vectors.
+   * @param {Vector3} a Specifies the first factor.
+   * @param {Vector3} b Specifies the second factor.
+   * @return {Vector3}  The cross product of the two vectors.
    */
   Vector3.crossProduct = function (a, b) {
-    return Vector3(
-      a.y * b.z - a.z * b.y,
-      a.z * b.x - a.x * b.z,
-      a.x * b.y - a.y * b.x
-    );
+    return a.crossProduct(b);
   };
 
   /**
-   * Vector dot product.  We overload the standard
-   * multiplication symbol to do this
-   * @param {Vector3} a
-   * @param {Vector3} b
-   * @return {number}
+   * Computes the dot product of two vectors.
+   * @param {Vector3} a Specifies the first factor.
+   * @param {Vector3} b Specifies the second factor.
+   * @return {number}   The dot product of the two vectors.
    */
   Vector3.dotProduct = function (a, b) {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
+    return a.dotProduct(b);
   };
 
   /**
-   * Compute the distance between two points
-   * @param {Vector3} a
-   * @param {Vector3} b
-   * @return {Number}
+   * Computes the distance between two vectors.
+   * @param {Vector3} a Specifies the first vector.
+   * @param {Vector3} b Specifies the second vector.
+   * @return {Number} The distance between the two vectors.
    */
   Vector3.distance = function (a, b) {
-    var dx = a.x - b.x
-      , dy = a.y - b.y
-      , dz = a.z - b.z
-      ;
-    return sqrt(dx * dx + dy * dy + dz * dz);
+    return a.distance(b);
   };
 
   /**
-   * Compute the distance between two points, squared.  Often useful
-   * when comparing distances, since the square root is slow
-   * @param {Vector3} a
-   * @param {Vector3} b
-   * @return {number}
+   * Computes the squared distance between two vectors.
+   * @param {Vector3} a Specifies the first vector.
+   * @param {Vector3} b Specifies the second vector.
+   * @return {Number} The squared distance between the two vectors.
    */
   Vector3.distanceSquared = function (a, b) {
-    var dx = a.x - b.x
-      , dy = a.y - b.y
-      , dz = a.z - b.z
-      ;
-    return dx * dx + dy * dy + dz * dz;
+    return a.distanceSquared(b);
   };
-
-//TODO check these methods
-//  Vector3.lerp = function (a, b, t) {
-//    return new Vector3(
-//      (1 - t) * a.x + t * b.x,
-//      (1 - t) * a.y + t * b.y,
-//      (1 - t) * a.z + t * b.z
-//    );
-//  };
 
   Vector3.isUnit = function (a) {
     return abs(Vector3.dotProduct(a, a) - 1) > .01;
@@ -273,13 +262,12 @@
 
   /**
    * Divides this vector by a scalar.
+   *
+   * @warning An attempt to pass zero into this operator will
+   *          result in a divide-by-zero error.
+   *
    * @param a Specifies the scalar divisor, which must not be zero.
    * @return {Vector3} The quotient of the vector and scalar.
-   *  \warning An attempt to pass zero into this operator will
-   *      result in a divide-by-zero error.
-   *
-   *  Divides this vector by a scalar.  Equivalent to multiplying
-   *  the vector by 1/a.
    */
   Vector3.prototype.divide = function (a) {
     var oneOverA = 1 / a    // NOTE: no check for divide by zero here
@@ -288,7 +276,29 @@
   };
 
   /**
-   * Normalize the vector
+   * Sets the vector's components.
+   * @param {Number|Vector3} x  Specifies the x-coordinate or the vector to be copied.
+   * @param {Number} y          Specifies the y-coordinate.
+   * @param {Number} z          Specifies the z-coordinate.
+   * @return {Vector3}          A reference to the vector.
+   */
+  Vector3.prototype.set = function (x, y, z) {
+    if (x instanceof Vector3) {
+      var v = x
+        ;
+      x = v.x;
+      y = v.y;
+      z = v.z;
+    }
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    return this;
+  };
+
+  /**
+   * Normalizes the vector to unit length.
+   * If this vector is the zero vector, does nothing.
    */
   Vector3.prototype.normalize = function () {
     var magSq = this.x * this.x + this.y * this.y + this.z * this.z
@@ -300,6 +310,76 @@
       this.y *= oneOverMag;
       this.z *= oneOverMag;
     }
+  };
+
+  /**
+   * Queries the vector for its magnitude.
+   * @return {Number} The magnitude of the vector.
+   * @remark Since a square root is required, use this function
+   *         only when exact magnitudes are needed.  Otherwise, use
+   *         magnitude squared.
+   */
+  Vector3.prototype.magnitude = function () {
+    return sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+  };
+
+  /**
+   * Queries the vector for its squared magnitude.
+   * @return {Number} The squared magnitude of the vector.
+   * @remark Since no square root is required, use this function
+   *         when only relative magnitudes are needed (such as when
+   *         sorting vectors by magnitude).
+   */
+  Vector3.prototype.magnitudeSquared = function () {
+    return this.x * this.x + this.y * this.y + this.z * this.z;
+  };
+
+  /**
+   * Computes the cross product of this vector and another.
+   * @param {Vector3}   a Specifies the second factor.
+   * @return {Vector3}  The cross product of the two vectors.
+   */
+  Vector3.prototype.crossProduct = function (a) {
+    return Vector3(
+      this.y * a.z - this.z * a.y,
+      this.z * a.x - this.x * a.z,
+      this.x * a.y - this.y * a.x
+    );
+  };
+
+  /**
+   * Computes the dot product of this vector and another.
+   * @param {Vector3} a Specifies the second factor.
+   * @return {Number} The dot product of the two vectors.
+   */
+  Vector3.prototype.dotProduct = function (a) {
+    return this.x * a.x + this.y * a.y + this.z * a.z;
+  };
+
+  /**
+   * Computes the distance between this vector and another.
+   * @param {Vector3} a Specifies the other vector.
+   * @return {Number} The distance between the two vectors.
+   */
+  Vector3.prototype.distance = function (a) {
+    var dx = this.x - a.x
+      , dy = this.y - a.y
+      , dz = this.z - a.z
+      ;
+    return sqrt(dx * dx + dy * dy + dz * dz);
+  };
+
+  /**
+   * Computes the squared distance between this vector and another.
+   * @param {Vector3} a Specifies the other vector.
+   * @return {Number} The squared distance between the two vectors.
+   */
+  Vector3.prototype.distanceSquared = function (a) {
+    var dx = this.x - a.x
+      , dy = this.y - a.y
+      , dz = this.z - a.z
+      ;
+    return dx * dx + dy * dy + dz * dz;
   };
 
   exports.Vector3 = Vector3;
