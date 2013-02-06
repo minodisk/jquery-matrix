@@ -2,7 +2,11 @@
   'use strict';
 
   var Math = this.Math
-    , PI = Math.PI
+    , kPi = Math.PI
+    , k2Pi = kPi * 2
+    , kPiOver2 = kPi / 2
+    , k1OverPi = 1 / kPi
+    , k1Over2Pi = 1 / kPiOver2
     , sin = Math.sin
     , cos = Math.cos
     , tan = Math.tan
@@ -10,11 +14,19 @@
     , acos = Math.acos
     , atan = Math.atan
     , atan2 = Math.atan2
-    , abs = Math.abs
     , sqrt = Math.sqrt
+    , abs = Math.abs
+    , floor = Math.floor
+    , ceil = Math.ceil
+    , wrapPi = function (theta) {
+      theta += kPi;
+      theta -= floor(theta * k1Over2Pi) * k2Pi;
+      theta -= kPi;
+      return theta;
+    }
     , safeAcos = function (theta) {
       if (theta <= -1) {
-        return PI;
+        return kPi;
       }
       if (theta >= 1) {
         return 0;
@@ -28,7 +40,7 @@
     }
 
     , EPSILON = 1e-6 //0.000001
-    , RADIAN_PER_DEGREE = PI / 180
+    , RADIAN_PER_DEGREE = kPi / 180
     , RADIAN_PER_DEGREE_1_2 = RADIAN_PER_DEGREE / 2
 
     , toString = Object.prototype.toString
@@ -47,56 +59,103 @@
     ;
 
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// class Vector3 - a simple 3D vector class
+//
+/////////////////////////////////////////////////////////////////////////////
+
   /**
-   * @param {Number} [x=0]
+   * Construct given three values or one Vector3
+   * @param {Number|Vector3} [x=0]
    * @param {Number} [y=0]
    * @param {Number} [z=0]
    * @return {Vector}
    * @constructor
    */
-  function Vector(x, y, z) {
+  function Vector3(x, y, z) {
     var v = x
       ;
 
     // type coercion
-    if (!(this instanceof Vector)) {
+    if (!(this instanceof Vector3)) {
       if (isArray(x)) {
-        return new Vector(x[0], x[1], x[2]);
+        return new Vector3(x[0], x[1], x[2]);
       }
       throw new TypeError('TypeError: Type Coercion failed: cannot convert ' + x + ' to Vector');
     }
 
     // clone
-    if (x instanceof Vector) {
+    if (x instanceof Vector3) {
       x = v.x;
       y = v.y;
       z = v.z;
     }
 
-    // assign
+// Public representation:  Not many options here.
+
     this.x = x != null ? x : 0;
     this.y = y != null ? y : 0;
     this.z = z != null ? z : 0;
   }
 
-  // STATIC
-  Vector.crossProduct = function (a, b) {
-    return new Vector(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
-  };
 
-  Vector.dotProduct = function (a, b) {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-  };
+/////////////////////////////////////////////////////////////////////////////
+//
+// Global variables
+//
+/////////////////////////////////////////////////////////////////////////////
 
-  Vector.equal = function (a, b) {
-    return a.x === b.x && a.y === b.y && a.z === b.z;
-  };
+// We provide a global zero vector constant
+  Vector3.kZeroVector = new Vector3(0, 0, 0);
 
-  Vector.mag = function (a) {
+/////////////////////////////////////////////////////////////////////////////
+//
+// Nonmember functions
+//
+/////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Compute the magnitude of a vector
+   * @param {Vector3} a
+   * @return {Number}
+   */
+  Vector3.vectorMag = function (a) {
     return sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
   };
 
-  Vector.distance = function (a, b) {
+  /**
+   * Compute the cross product of two vectors
+   * @param {Vector3} a
+   * @param {Vector3} b
+   * @return {Vector3}
+   */
+  Vector3.crossProduct = function (a, b) {
+    return Vector3(
+      a.y * b.z - a.z * b.y,
+      a.z * b.x - a.x * b.z,
+      a.x * b.y - a.y * b.x
+    );
+  };
+
+  /**
+   * Vector dot product.  We overload the standard
+   * multiplication symbol to do this
+   * @param {Vector3} a
+   * @param {Vector3} b
+   * @return {number}
+   */
+  Vector3.dotProduct = function (a, b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+  };
+
+  /**
+   * Compute the distance between two points
+   * @param {Vector3} a
+   * @param {Vector3} b
+   * @return {Number}
+   */
+  Vector3.distance = function (a, b) {
     var dx = a.x - b.x
       , dy = a.y - b.y
       , dz = a.z - b.z
@@ -104,56 +163,614 @@
     return sqrt(dx * dx + dy * dy + dz * dz);
   };
 
-  Vector.lerp = function (a, b, t) {
-    return new Vector(
-      (1 - t) * a.x + t * b.x,
-      (1 - t) * a.y + t * b.y,
-      (1 - t) * a.z + t * b.z
-    );
+  /**
+   * Compute the distance between two points, squared.  Often useful
+   * when comparing distances, since the square root is slow
+   * @param {Vector3} a
+   * @param {Vector3} b
+   * @return {number}
+   */
+  Vector3.distanceSquared = function (a, b) {
+    var dx = a.x - b.x
+      , dy = a.y - b.y
+      , dz = a.z - b.z
+      ;
+    return dx * dx + dy * dy + dz * dz;
   };
 
-  Vector.isUnit = function (a) {
-    return abs(Vector.scalarProduct(a, a) - 1) > .01;
+//TODO check these methods
+//  Vector3.equal = function (a, b) {
+//    return a.x === b.x && a.y === b.y && a.z === b.z;
+//  };
+//
+//  Vector3.lerp = function (a, b, t) {
+//    return new Vector3(
+//      (1 - t) * a.x + t * b.x,
+//      (1 - t) * a.y + t * b.y,
+//      (1 - t) * a.z + t * b.z
+//    );
+//  };
+
+  Vector3.isUnit = function (a) {
+    return abs(Vector3.dotProduct(a, a) - 1) > .01;
   };
 
-  // MEMBER
-  Vector.prototype.add = function (v) {
-    return new Vector(this.x + v.x, this.y + v.y, this.z + v.z);
+/////////////////////////////////////////////////////////////////////////////
+//
+// Member functions
+//
+/////////////////////////////////////////////////////////////////////////////
+
+  // Set the vector to zero
+  Vector3.prototype.zero = function () {
+    this.x = this.y = this.z = 0;
   };
 
-  Vector.prototype.sub = function (v) {
-    return new Vector(this.x - v.x, this.y - v.y, this.z - v.z);
+  // Unary minus returns the negative of the vector
+  Vector3.prototype.minus = function () {
+    return Vector3(-this.x, -this.y, -this.z);
   };
 
-  Vector.prototype.mul = function (n) {
-    return new Vector(this.x * n, this.y * n, this.z * n);
+  // Binary + and - add and subtract vectors
+  Vector3.prototype.add = function (a) {
+    return new Vector3(this.x + a.x, this.y + a.y, this.z + a.z);
   };
 
-  Vector.prototype.dev = function (n) {
-    return new Vector(this.x / n, this.y / n, this.z / n);
+  Vector3.prototype.subtract = function (a) {
+    return new Vector3(this.x - a.x, this.y - a.y, this.z - a.z);
   };
 
-  Vector.prototype.zero = function () {
-    this.x = 0;
-    this.y = 0;
-    this.z = 0;
-    return this;
+  // Multiplication and division by scalar
+  Vector3.prototype.multiply = function (a) {
+    return new Vector3(this.x * a, this.y * a, this.z * a);
   };
 
-  Vector.prototype.normalize = function () {
+  Vector3.prototype.divide = function (a) {
+    var oneOverA = 1 / a    // NOTE: no check for divide by zero here
+      ;
+    return new Vector3(this.x * oneOverA, this.y * oneOverA, this.z * oneOverA);
+  };
+
+  /**
+   * Normalize the vector
+   */
+  Vector3.prototype.normalize = function () {
     var magSq = this.x * this.x + this.y * this.y + this.z * this.z
       , oneOverMag
       ;
-    if (magSq > 0) {
+    if (magSq > 0) { // check for divide-by-zero
       oneOverMag = 1 / sqrt(magSq);
       this.x *= oneOverMag;
       this.y *= oneOverMag;
       this.z *= oneOverMag;
     }
-    return this;
   };
 
-  exports.Vector = Vector;
+  exports.Vector3 = Vector3;
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Notes:
+//
+// See Chapter 11 for more information on class design decisions.
+//
+// See section 10.3 for more information on the Euler angle conventions
+// assumed.
+//
+/////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * This class represents a heading-pitch-bank Euler angle triple.
+   * @param heading
+   * @param pitch
+   * @param bank
+   * @constructor
+   */
+  function EulerAngles(heading, pitch, bank) {
+// Public data
+
+    // Straightforward representation.  Store the three angles, in
+    // radians
+    this.heading = heading != null ? heading : 0;
+    this.pitch = pitch != null ? pitch : 0;
+    this.bank = bank != null ? bank : 0;
+  }
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// static
+//
+/////////////////////////////////////////////////////////////////////////////
+
+
+  /**
+   * The global "identity" Euler angle constant.  Now we may not know exactly
+   * when this object may get constructed, in relation to other objects, so
+   * it is possible for the object to be referenced before it is initialized.
+   * However, on most implementations, it will be zero-initialized at program
+   * startup anyway, before any other objects are constructed.
+   * @type {EulerAngles}
+   */
+  EulerAngles.kEulerAnglesIdentity = new EulerAngles(0, 0, 0);
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// member
+//
+/////////////////////////////////////////////////////////////////////////////
+
+  EulerAngles.prototype.identity = function () {
+    this.heading = this.pitch = this.bank = 0;
+  };
+
+  /**
+   * Set the Euler angle triple to its "canonical" value.  This does not change
+   * the meaning of the Euler angles as a representation of Orientation in 3D,
+   * but if the angles are for other purposes such as angular velocities, etc,
+   * then the operation might not be valid.
+   *
+   * See section 10.3 for more information.
+   */
+  EulerAngles.prototype.canonize = function () {
+
+    // First, wrap pitch in range -pi ... pi
+
+    this.pitch = wrapPi(this.pitch);
+
+    // Now, check for "the back side" of the matrix, pitch outside
+    // the canonical range of -pi/2 ... pi/2
+
+    if (this.pitch < -kPiOver2) {
+      this.pitch = -kPi - this.pitch;
+      this.heading += kPi;
+      this.bank += kPi;
+    } else if (pitch > kPiOver2) {
+      this.pitch = kPi - pitch;
+      this.heading += kPi;
+      this.bank += kPi;
+    }
+
+    // OK, now check for the gimbel lock case (within a slight
+    // tolerance)
+
+    if (abs(pitch) > kPiOver2 - 1e-4) {
+
+      // We are in gimbel lock.  Assign all rotation
+      // about the vertical axis to heading
+
+      this.heading += this.bank;
+      this.bank = 0.0;
+
+    } else {
+
+      // Not in gimbel lock.  Wrap the bank angle in
+      // canonical range
+
+      this.bank = wrapPi(this.bank);
+    }
+
+    // Wrap heading in canonical range
+
+    this.heading = wrapPi(this.heading);
+  };
+
+  /**
+   * Setup the Euler angles, given an object->inertial rotation quaternion
+   *
+   * See 10.6.6 for more information.
+   *
+   * @param {Quaternion} q
+   */
+  EulerAngles.prototype.fromObjectToInertialQuaternion = function (q) {
+
+    // Extract sin(pitch)
+
+    var sp = -2.0 * (q.y * q.z - q.w * q.x)
+      ;
+
+    // Check for Gimbel lock, giving slight tolerance for numerical imprecision
+
+    if (abs(sp) > 0.9999) {
+
+      // Looking straight up or down
+
+      this.pitch = kPiOver2 * sp;
+
+      // Compute heading, slam bank to zero
+
+      this.heading = atan2(-q.x * q.z + q.w * q.y, 0.5 - q.y * q.y - q.z * q.z);
+      this.bank = 0.0;
+
+    } else {
+
+      // Compute angles.  We don't have to use the "safe" asin
+      // function because we already checked for range errors when
+      // checking for Gimbel lock
+
+      this.pitch = asin(sp);
+      this.heading = atan2(q.x * q.z + q.w * q.y, 0.5 - q.x * q.x - q.y * q.y);
+      this.bank = atan2(q.x * q.y + q.w * q.z, 0.5 - q.x * q.x - q.z * q.z);
+    }
+  };
+
+  /**
+   * Setup the Euler angles, given an inertial->object rotation quaternion
+   *
+   * See 10.6.6 for more information.
+   *
+   * @param {Quaternion} q
+   */
+  EulerAngles.prototype.fromInertialToObjectQuaternion = function (q) {
+
+    // Extract sin(pitch)
+
+    var sp = -2 * (q.y * q.z + q.w * q.x)
+      ;
+
+    // Check for Gimbel lock, giving slight tolerance for numerical imprecision
+
+    if (abs(sp) > 0.9999) {
+
+      // Looking straight up or down
+
+      this.pitch = kPiOver2 * sp;
+
+      // Compute heading, slam bank to zero
+
+      this.heading = atan2(-q.x * q.z - q.w * q.y, 0.5 - q.y * q.y - q.z * q.z);
+      this.bank = 0;
+
+    } else {
+
+      // Compute angles.  We don't have to use the "safe" asin
+      // function because we already checked for range errors when
+      // checking for Gimbel lock
+
+      this.pitch = asin(sp);
+      this.heading = atan2(q.x * q.z - q.w * q.y, 0.5 - q.x * q.x - q.y * q.y);
+      this.bank = atan2(q.x * q.y - q.w * q.z, 0.5 - q.x * q.x - q.z * q.z);
+    }
+  };
+
+  /**
+   * Setup the Euler angles, given an object->world transformation matrix.
+   *
+   * The matrix is assumed to be orthogonal.  The translation portion is
+   * ignored.
+   *
+   * See 10.6.2 for more information.
+   * @param {Matrix} m
+   */
+  EulerAngles.prototype.fromObjectToWorldMatrix = function (m) {
+
+    // Extract sin(pitch) from m32.
+
+    var sp = -m.m32;
+
+    // Check for Gimbel lock
+
+    if (abs(sp) > 9.99999) {
+
+      // Looking straight up or down
+
+      this.pitch = kPiOver2 * sp;
+
+      // Compute heading, slam bank to zero
+
+      this.heading = atan2(-m.m23, m.m11);
+      this.bank = 0;
+
+    } else {
+
+      // Compute angles.  We don't have to use the "safe" asin
+      // function because we already checked for range errors when
+      // checking for Gimbel lock
+
+      this.heading = atan2(m.m31, m.m33);
+      this.pitch = asin(sp);
+      this.bank = atan2(m.m12, m.m22);
+    }
+  };
+
+  /**
+   * Setup the Euler angles, given a world->object transformation matrix.
+   *
+   * The matrix is assumed to be orthogonal.  The translation portion is
+   * ignored.
+   *
+   * See 10.6.2 for more information.
+   * @param {Matrix} m
+   */
+  EulerAngles.prototype.fromWorldToObjectMatrix = function (m) {
+
+    // Extract sin(pitch) from m23.
+
+    var sp = -m.m23
+      ;
+
+    // Check for Gimbel lock
+
+    if (abs(sp) > 9.99999) {
+
+      // Looking straight up or down
+
+      this.pitch = kPiOver2 * sp;
+
+      // Compute heading, slam bank to zero
+
+      this.heading = atan2(-m.m31, m.m11);
+      this.bank = 0;
+
+    } else {
+
+      // Compute angles.  We don't have to use the "safe" asin
+      // function because we already checked for range errors when
+      // checking for Gimbel lock
+
+      this.heading = atan2(m.m13, m.m33);
+      this.pitch = asin(sp);
+      this.bank = atan2(m.m21, m.m22);
+    }
+  };
+
+  /**
+   * Setup the Euler angles, given a rotation matrix.
+   * See 10.6.2 for more information.
+   * @param {RotationMatrix} m
+   */
+  EulerAngles.prototype.fromRotationMatrix = function (m) {
+
+    // Extract sin(pitch) from m23.
+
+    var sp = -m.m23
+      ;
+
+    // Check for Gimbel lock
+
+    if (abs(sp) > 9.99999) {
+
+      // Looking straight up or down
+
+      this.pitch = kPiOver2 * sp;
+
+      // Compute heading, slam bank to zero
+
+      this.heading = atan2(-m.m31, m.m11);
+      this.bank = 0;
+
+    } else {
+
+      // Compute angles.  We don't have to use the "safe" asin
+      // function because we already checked for range errors when
+      // checking for Gimbel lock
+
+      this.heading = atan2(m.m13, m.m33);
+      this.pitch = asin(sp);
+      this.bank = atan2(m.m21, m.m22);
+    }
+  };
+
+  exports.EulerAngles = EulerAngles;
+
+
+  /**
+   * class RotationMatrix
+   *
+   * Implement a simple 3x3 matrix that is used for ROTATION ONLY.  The
+   * matrix is assumed to be orthogonal.  The direction of transformation
+   * is specified at the time of transformation.
+   *
+   * \brief Implements a 3x3 rotation matrix in 3-space.
+   *
+   * Implements a 3x3 rotation matrix in 3-space.  The matrix is assumed
+   * to be orthogonal.
+   *
+   * @param m11
+   * @param m12
+   * @param m13
+   * @param m21
+   * @param m22
+   * @param m23
+   * @param m31
+   * @param m32
+   * @param m33
+   * @constructor
+   */
+  function RotationMatrix(m11, m12, m13, m21, m22, m23, m31, m32, m33) {
+    // The 9 values of the matrix.  See RotationMatrix.cpp file for
+    // the details of the layout
+    this.m11 = m11;
+    this.m12 = m12;
+    this.m13 = m13;
+    this.m21 = m21;
+    this.m22 = m22;
+    this.m23 = m23;
+    this.m31 = m31;
+    this.m32 = m32;
+    this.m33 = m33;
+  }
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// class RotationMatrix
+//
+//---------------------------------------------------------------------------
+//
+// MATRIX ORGANIZATION
+//
+// A user of this class should rarely care how the matrix is organized.
+// However, it is of course important that internally we keep everything
+// straight.
+//
+// The matrix is assumed to be a rotation matrix only, and therefore
+// orthogonal.  The "forward" direction of transformation (if that really
+// even applies in this case) will be from inertial to object space.
+// To perform an object->inertial rotation, we will multiply by the
+// transpose.
+//
+// In other words:
+//
+// Inertial to object:
+//
+//                  | m11 m12 m13 |
+//     [ ix iy iz ] | m21 m22 m23 | = [ ox oy oz ]
+//                  | m31 m32 m33 |
+//
+// Object to inertial:
+//
+//                  | m11 m21 m31 |
+//     [ ox oy oz ] | m12 m22 m32 | = [ ix iy iz ]
+//                  | m13 m23 m33 |
+//
+// Or, using column vector notation:
+//
+// Inertial to object:
+//
+//     | m11 m21 m31 | | ix |	| ox |
+//     | m12 m22 m32 | | iy | = | oy |
+//     | m13 m23 m33 | | iz |	| oz |
+//
+// Object to inertial:
+//
+//     | m11 m12 m13 | | ox |	| ix |
+//     | m21 m22 m23 | | oy | = | iy |
+//     | m31 m32 m33 | | oz |	| iz |
+//
+/////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * RotationMatrix.prototype.identity
+   * Set the matrix to the identity matrix
+   */
+  RotationMatrix.prototype.identity = function () {
+    this.m11 = 1;
+    this.m12 = 0;
+    this.m13 = 0;
+    this.m21 = 0;
+    this.m22 = 1;
+    this.m23 = 0;
+    this.m31 = 0;
+    this.m32 = 0;
+    this.m33 = 1;
+  };
+
+  /**
+   * RotationMatrix.prototype.setup
+   * Setup the matrix with the specified orientation
+   * See 10.6.1
+   *
+   * @param {EulerAngles} orientation Specifies the Euler triplet to be converted.
+   */
+  RotationMatrix.prototype.setup = function (orientation) {
+    // Fetch sine and cosine of angles
+    var sh = sin(orientation.heading)
+      , ch = cos(orientation.heading)
+      , sp = sin(orientation.pitch)
+      , cp = cos(orientation.pitch)
+      , sb = sin(orientation.bank)
+      , cb = cos(orientation.bank)
+      ;
+
+    // Fill in the matrix elements
+    this.m11 = ch * cb + sh * sp * sb;
+    this.m12 = -ch * sb + sh * sp * cb;
+    this.m13 = sh * cp;
+
+    this.m21 = sb * cp;
+    this.m22 = cb * cp;
+    this.m23 = -sp;
+
+    this.m31 = -sh * cb + ch * sp * sb;
+    this.m32 = sb * sh + ch * sp * cb;
+    this.m33 = ch * cp;
+  };
+
+  /**
+   * Setup the matrix, given a quaternion that performs an inertial->object
+   * rotation
+   *
+   * See 10.6.3
+   *
+   * Initializes the matrix from a quaternion, assuming the quaternion
+   * performs the rotation from inertial to object space.
+   *
+   * @param {Quaternion} q Specifies the quaternion to be converted.
+   */
+  RotationMatrix.prototype.fromInertialToObjectQuaternion = function (q) {
+    // Fill in the matrix elements.  This could possibly be
+    // optimized since there are many common subexpressions.
+    // We'll leave that up to the compiler...
+
+    this.m11 = 1 - 2 * (q.y * q.y + q.z * q.z);
+    this.m12 = 2 * (q.x * q.y + q.w * q.z);
+    this.m13 = 2 * (q.x * q.z - q.w * q.y);
+
+    this.m21 = 2 * (q.x * q.y - q.w * q.z);
+    this.m22 = 1 - 2 * (q.x * q.x + q.z * q.z);
+    this.m23 = 2 * (q.y * q.z + q.w * q.x);
+
+    this.m31 = 2 * (q.x * q.z + q.w * q.y);
+    this.m32 = 2 * (q.y * q.z - q.w * q.x);
+    this.m33 = 1 - 2 * (q.x * q.x + q.y * q.y);
+  };
+
+  /**
+   * Setup the matrix, given a quaternion that performs an object->inertial
+   * rotation
+   *
+   * See 10.6.3
+   *
+   * Initializes the matrix from a quaternion, assuming the quaternion
+   * performs the rotation from object to inertial space.
+   * @param {Quaternion} q Specifies the quaternion to be converted.
+   */
+  RotationMatrix.prototype.fromObjectToInertialQuaternion = function (q) {
+    // Fill in the matrix elements.  This could possibly be
+    // optimized since there are many common subexpressions.
+    // We'll leave that up to the compiler...
+
+    this.m11 = 1 - 2 * (q.y * q.y + q.z * q.z);
+    this.m12 = 2 * (q.x * q.y - q.w * q.z);
+    this.m13 = 2 * (q.x * q.z + q.w * q.y);
+
+    this.m21 = 2 * (q.x * q.y + q.w * q.z);
+    this.m22 = 1 - 2 * (q.x * q.x + q.z * q.z);
+    this.m23 = 2 * (q.y * q.z - q.w * q.x);
+
+    this.m31 = 2 * (q.x * q.z - q.w * q.y);
+    this.m32 = 2 * (q.y * q.z + q.w * q.x);
+    this.m33 = 1 - 2 * (q.x * q.x + q.y * q.y);
+  };
+
+  /**
+   * Rotate a vector from inertial to object space
+   * @param {Vector3} v Specifies the vector to be transformed.
+   * @return {Vector3} The transformed vector.
+   */
+  RotationMatrix.prototype.inertialToObject = function (v) {
+    // Perform the matrix multiplication in the "standard" way.
+    return Vector3(
+      this.m11 * v.x + this.m21 * v.y + this.m31 * v.z,
+      this.m12 * v.x + this.m22 * v.y + this.m32 * v.z,
+      this.m13 * v.x + this.m23 * v.y + this.m33 * v.z
+    );
+  };
+
+  /**
+   * Rotate a vector from object to inertial space
+   * @param {Vector3} v Specifies the vector to be transformed.
+   * @return {Vector3} The transformed vector.
+   */
+  RotationMatrix.prototype.objectToInertial = function (v) {
+    // Multiply by the transpose
+    return new Vector3(
+      m11 * v.x + m12 * v.y + m13 * v.z,
+      m21 * v.x + m22 * v.y + m23 * v.z,
+      m31 * v.x + m32 * v.y + m33 * v.z
+    );
+  };
 
 
   /**
@@ -254,7 +871,7 @@
    */
   Matrix.product = function (a, b) {
     if (a instanceof Vector) {
-      return new Vector(
+      return new Vector3(
         a.x * b.m11 + a.y * b.m21 + a.z * b.m31 + b.tx,
         a.x * b.m12 + a.y * b.m22 + a.z * b.m32 + b.ty,
         a.x * b.m13 + a.y * b.m23 + a.z * b.m33 + b.tz
@@ -319,7 +936,7 @@
   };
 
   Matrix.getTranslation = function (m) {
-    return new Vector(m.tx, m.ty, m.tz);
+    return new Vector3(m.tx, m.ty, m.tz);
   };
 
   // MEMBER
@@ -368,7 +985,7 @@
   };
 
   Matrix.prototype.setupRotate = function (axis, theta) {
-    if (Vector.isUnit(axis)) {
+    if (Vector3.isUnit(axis)) {
       throw TypeError();
     }
 
@@ -506,7 +1123,7 @@
    * @param {Number} k
    */
   Matrix.prototype.setupScaleAlongAxis = function (axis, k) {
-    if (Vector.isUnit(axis)) {
+    if (Vector3.isUnit(axis)) {
       throw TypeError();
     }
 
@@ -578,7 +1195,7 @@
    * @param {Vector} n
    */
   Matrix.prototype.setupProject = function (n) {
-    if (!Vector.isUnit(n)) {
+    if (!Vector3.isUnit(n)) {
       throw new TypeError();
     }
 
@@ -651,7 +1268,7 @@
 
     var n = axis
       ;
-    if (!Vector.isUnit(n)) {
+    if (!Vector3.isUnit(n)) {
       throw new TypeError('axis should be Vector');
     }
 
@@ -744,7 +1361,7 @@
   };
 
   Quaternion.prototype.setToRotateAboutAxis = function (axis, theta) {
-    if (!Vector.isUnit(axis)) {
+    if (!Vector3.isUnit(axis)) {
       throw new TypeError();
     }
 
@@ -822,12 +1439,12 @@
     var sinThetaOver2Sq = 1 - this.w * this.w
       ;
     if (sinThetaOver2Sq <= 0) {
-      return new Vector(1, 0, 0);
+      return new Vector3(1, 0, 0);
     }
 
     var oneOverSinThetaOver2 = 1 / sqrt(sinThetaOver2Sq)
       ;
-    return new Vector(
+    return new Vector3(
       this.x * oneOverSinThetaOver2,
       this.y * oneOverSinThetaOver2,
       this.z * oneOverSinThetaOver2
@@ -923,28 +1540,28 @@
 //    var qResult = Quaternion.lerp(qStart, qEnd, slerpAmount);
 //
 ////平行移動行列はVector3.Lerpを使っている
-//    var curTrans = new Vector();
+//    var curTrans = new Vector3();
 //    curTrans.x = start.tx;
 //    curTrans.y = start.ty;
 //    curTrans.z = start.tz;
-//    var nextTrans = new Vector();
+//    var nextTrans = new Vector3();
 //    nextTrans.x = end.tx;
 //    nextTrans.y = end.ty;
 //    nextTrans.z = end.tz;
-//    var lerpedTrans = Vector.lerp(curTrans, nextTrans, slerpAmount);
+//    var lerpedTrans = Vector3.lerp(curTrans, nextTrans, slerpAmount);
 //
 ////拡大縮小行列にはVector3.Lerp
 //    var startRotation = Matrix.createFromQuaternion(qStart);
 //    var endRotation = Matrix.createFromQuaternion(qEnd);
-//    var curScale = new Vector();
+//    var curScale = new Vector3();
 //    curScale.x = start.m11 - startRotation.m11;
 //    curScale.y = start.m22 - startRotation.m22;
 //    curScale.z = start.m33 - startRotation.m33;
-//    var nextScale = new Vector();
+//    var nextScale = new Vector3();
 //    nextScale.x = end.m11 - endRotation.m11;
 //    nextScale.y = end.m22 - endRotation.m22;
 //    nextScale.z = end.m33 - endRotation.m33;
-//    var lerpedScale = Vector.lerp(curScale, nextScale, slerpAmount);
+//    var lerpedScale = Vector3.lerp(curScale, nextScale, slerpAmount);
 //
 ////srt行列を作成してMatrix.CreateScale(S*R*T)と同じことをしている（こっちのが断然軽い）
 //    var returnMatrix = Matrix.createFromQuaternion(qResult);
