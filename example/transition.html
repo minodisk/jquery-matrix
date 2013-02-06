@@ -45,9 +45,9 @@
           x        : [-100, 100],
           y        : [-100, 100],
           z        : [-100, 100],
-//          scaleX   : [-2, 2],
-//          scaleY   : [-2, 2],
-//          scaleZ   : [-2, 2],
+          scaleX   : [-2, 2],
+          scaleY   : [-2, 2],
+          scaleZ   : [-2, 2],
           rotationX: [-360, 360],
           rotationY: [-360, 360],
           rotationZ: [-360, 360]
@@ -70,7 +70,9 @@
           transform[prop] = between.apply(null, range);
           $box
             .stop3()
-            .animate3({transform: transform}, 2, 'easeOutQuad');
+            .animate3({
+              transform: transform
+            }, 2, 'easeOutQuad');
         }
         ;
 
@@ -80,11 +82,11 @@
 
             $container = $('.container');
             $box = $container.find('.box')
-              .css({
-                transform: {
-                  perspective: 500
-                }
-              });
+//              .css({
+//                transform: {
+//                  perspective: 500
+//                }
+//              });
             setInterval(stopAndAnimate, 1000);
 
           }, 1000);

@@ -66,10 +66,14 @@
 /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Construct given three values or one Vector3
-   * @param {Number|Vector3} [x=0]
-   * @param {Number} [y=0]
-   * @param {Number} [z=0]
+   * A representation of a three-dimensional vector.
+   *
+   * Constructs a vector with the specified coordinates, when three values are given.
+   * Constructs a deep copy of a vector, when one vector is given.
+   *
+   * @param {Number|Vector3} [x=0] Specifies the x-coordinate or the vector to be copied.
+   * @param {Number} [y=0]         Specifies the y-coordinate.
+   * @param {Number} [z=0]         Specifies the z-coordinate.
    * @return {Vector}
    * @constructor
    */
@@ -179,10 +183,6 @@
   };
 
 //TODO check these methods
-//  Vector3.equal = function (a, b) {
-//    return a.x === b.x && a.y === b.y && a.z === b.z;
-//  };
-//
 //  Vector3.lerp = function (a, b, t) {
 //    return new Vector3(
 //      (1 - t) * a.x + t * b.x,
@@ -201,30 +201,86 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-  // Set the vector to zero
+  /**
+   * Assigns a deep copy of a vector to this.
+   * @param {Vector3} a  Specifies the vector to be copied.
+   */
+  Vector3.prototype.assign = function (a) {
+    this.x = a.x;
+    this.y = a.y;
+    this.z = a.z;
+  };
+
+  /**
+   * Checks this vector and another for equality.
+   * @param {Vector3} a Specifies the vector to be compared.
+   * @return {boolean} true iff the two vectors are equivalent.
+   */
+  Vector3.prototype.equals = function (a) {
+    return this.x === a.x && this.y === a.y && this.z === a.z;
+  };
+
+  /**
+   * Checks this vector and another for strict inequality.
+   * @param {Vector3} a Specifies the vector to be compared.
+   * @return {boolean} true iff the two vectors are not equivalent.
+   */
+  Vector3.prototype.notEquals = function (a) {
+    return this.x !== a.x || this.y !== a.y || this.z !== a.z;
+  };
+
+  /**
+   * Sets this vector to the zero vector.
+   */
   Vector3.prototype.zero = function () {
     this.x = this.y = this.z = 0;
   };
 
-  // Unary minus returns the negative of the vector
+  /**
+   * Negates the vector
+   * @return {Vector3} The additive inverse (negation) of this vector.
+   */
   Vector3.prototype.minus = function () {
     return Vector3(-this.x, -this.y, -this.z);
   };
 
-  // Binary + and - add and subtract vectors
+  /**
+   * Adds a vector to this vector.
+   * @param a Specifies the vector to be added to this.
+   * @return {Vector3} The sum of the two vectors.
+   */
   Vector3.prototype.add = function (a) {
     return new Vector3(this.x + a.x, this.y + a.y, this.z + a.z);
   };
 
+  /**
+   * Subtracts a vector from this vector.
+   * @param a Specifies the vector to be subtracted from this.
+   * @return {Vector3} The difference of the two vectors.
+   */
   Vector3.prototype.subtract = function (a) {
     return new Vector3(this.x - a.x, this.y - a.y, this.z - a.z);
   };
 
-  // Multiplication and division by scalar
+  /**
+   * Multiplies this vector by a scalar.
+   * @param a Specifies the scalar factor.
+   * @return {Vector3} The product of the scalar and vector.
+   */
   Vector3.prototype.multiply = function (a) {
     return new Vector3(this.x * a, this.y * a, this.z * a);
   };
 
+  /**
+   * Divides this vector by a scalar.
+   * @param a Specifies the scalar divisor, which must not be zero.
+   * @return {Vector3} The quotient of the vector and scalar.
+   *  \warning An attempt to pass zero into this operator will
+   *      result in a divide-by-zero error.
+   *
+   *  Divides this vector by a scalar.  Equivalent to multiplying
+   *  the vector by 1/a.
+   */
   Vector3.prototype.divide = function (a) {
     var oneOverA = 1 / a    // NOTE: no check for divide by zero here
       ;
@@ -562,7 +618,7 @@
    * matrix is assumed to be orthogonal.  The direction of transformation
    * is specified at the time of transformation.
    *
-   * \brief Implements a 3x3 rotation matrix in 3-space.
+   *Implements a 3x3 rotation matrix in 3-space.
    *
    * Implements a 3x3 rotation matrix in 3-space.  The matrix is assumed
    * to be orthogonal.

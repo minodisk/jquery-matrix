@@ -55,13 +55,13 @@
           $box = $container.find('.box')
             .css({
               transform: {
-                perspective: 500,
+                perspective: 500/*,
                 x:10,
                 y:10,
                 z:10,
                 scaleX:2,
                 scaleY:-1,
-                scaleZ:3
+                scaleZ:3*/
               }
             });
 
@@ -69,9 +69,9 @@
             $box.
               animate3({
                 transform: {
-                  rotationX: 120,
-                  rotationY: 270,
-                  rotationZ: -210
+                  rotationX: 80,
+                  rotationY: 90,
+                  rotationZ: 100
                 }
               }, 2, 'linear');
             setTimeout(function () {
