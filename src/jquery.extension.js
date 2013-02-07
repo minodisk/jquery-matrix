@@ -1,5 +1,5 @@
 var VENDOR = $.browser.webkit ? 'webkit'
-    : $.browser.mozilla ? 'moz'
+//    : $.browser.mozilla ? 'moz'
     : $.browser.msie ? 'ms'
     : $.browser.opera ? 'op'
     : null
@@ -70,8 +70,15 @@ $.extend($.cssHooks, {
       return elem.style[Prop.PERSPECTIVE];
     },
     set: function (elem, value) {
-      console.log(value);
       elem.style[Prop.PERSPECTIVE] = value;
+    }
+  },
+  transform: {
+    get: function (elem, computed) {
+      return elem.style[Prop.TRANSFORM];
+    },
+    set: function (elem, value) {
+      elem.style[Prop.TRANSFORM] = value;
     }
   },
   matrix     : {
@@ -79,6 +86,11 @@ $.extend($.cssHooks, {
       return new CSSMatrix(elem.style[Prop.TRANSFORM]);
     },
     set: function (elem, value) {
+      if (value === '' || value == null) {
+        elem.style[Prop.TRANSFORM] = '';
+        return;
+      }
+
       elem.style[Prop.TRANSFORM] = value.toString();
     }
   },
@@ -87,20 +99,21 @@ $.extend($.cssHooks, {
       elem.style[Prop.TRANSFORM_ORIGIN];
     },
     set: function (elem, value) {
+      if (value === '' || value == null) {
+        elem.style[Prop.TRANSFORM_ORIGIN] = '';
+        return;
+      }
+
       elem.style[Prop.TRANSFORM_ORIGIN] = [value.x + 'px', value.y + 'px'].join(' ');
     }
-  }
-});
-
-$.extend($.cssHooks, {
-
+  },
   transition: {
     get: function (elem, computed) {
-      return $(elem).css(Prop.TRANSITION);
+      return elem.style[Prop.TRANSITION];
     },
     set: function (elem, value) {
-      if (!value) {
-        $(elem).css(Prop.TRANSITION, '');
+      if (value === '' || value == null) {
+        elem.style[Prop.TRANSITION] = '';
         return;
       }
 
@@ -123,10 +136,9 @@ $.extend($.cssHooks, {
         }
         transitions[i] = [prop, duration + 's', easing].join(' ');
       }
-      $(elem).css(Prop.TRANSITION, transitions.join(', '));
+      elem.style[Prop.TRANSITION] = transitions.join(', ');
     }
   }
-
 });
 
 // animation methods
@@ -143,15 +155,11 @@ $.fn.extend({
           })
           .appendTo('body')
         , transitions = []
-        , from = $(this).css('transform')
-        , to = Transform(from).merge(props.transform)
         , prop
         ;
 
       $._data(this, 'animate3', {
-        $dummy: $dummy,
-        from  : from,
-        to    : to
+        $dummy: $dummy
       });
 
       for (prop in props) {
@@ -173,9 +181,8 @@ $.fn.extend({
       // CSS 適用直後に animate3 を叩くケースに対応するために、
       // Transition の適用は次のイベントサイクルに持ち越す。
       setTimeout(function () {
-        // ダミー要素にイベントを貼ることで
-        // はじめから目標値に設定されていた場合はtransitionEndがtriggerされない
-        // 問題に対応する。
+        // ダミー要素にイベントを貼ることで、既に目標値に到達していた場合に
+        // transitionEnd イベントが trigger されない問題に対応する。
         $dummy
           .css({
             transition: {
