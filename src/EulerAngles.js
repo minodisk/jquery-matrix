@@ -1,10 +1,12 @@
-/////////////////////////////////////////////////////////////////////////////
-//
-// 3D Math Primer for Games and Graphics Development
-//
-// EulerAngles.cpp - Implementation of class EulerAngles
-//
-/////////////////////////////////////////////////////////////////////////////
+/**
+ * class EulerAngles
+ *
+ * This class represents a heading-pitch-bank Euler angle triple.
+ *
+ * An Euler-angle-based representation of orientation.
+ *
+ * Straightforward representation.  Store the three angles, in radians
+ */
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -17,6 +19,13 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Constructs an Euler angle triple with the given angles.
+ * @param heading Specifies the heading (yaw) angle.
+ * @param pitch   Specifies the pitch angle.
+ * @param bank    Specifies the bank (roll) angle.
+ * @constructor
+ */
 function EulerAngles(heading, pitch, bank) {
   // Straightforward representation.  Store the three angles, in
   // radians
@@ -32,6 +41,34 @@ EulerAngles.kEulerAnglesIdentity = new EulerAngles(0, 0, 0);
 // class EulerAngles Implementation
 //
 /////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Sets this to the identity orientation (all zeros).
+ */
+EulerAngles.prototype.identity = function () {
+  this.heading = this.pitch = this.bank = 0;
+};
+
+/**
+ * Sets the angles to given values or copies another set of Euler angles.
+ * @param {Number|EulerAngles} heading Specifies the heading angle or the angles to be copied.
+ * @param {Number} pitch Specifies the pitch angle
+ * @param {Number} bank Specifies the bank angle
+ * @return {EulerAngles} A reference to the angles.
+ */
+EulerAngles.prototype.set = function (heading, pitch, bank) {
+  if (heading instanceof EulerAngles) {
+    var ea = heading
+      ;
+    heading = ea.heading;
+    pitch = ea.pitch;
+    bank = ea.bank;
+  }
+  this.heading = heading;
+  this.pitch = pitch;
+  this.bank = bank;
+  return this;
+};
 
 /**
  * Determines the canonical Euler angle triple for this
@@ -264,4 +301,65 @@ EulerAngles.prototype.fromRotationMatrix = function (m) {
     this.pitch = asin(sp);
     this.bank = atan2(m.m12, m.m22);
   }
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Operator
+//
+/////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Adds two Euler angles together.
+ * @param {EulerAngles} a Euler angle to add.
+ * @return {EulerAngles} Sum of the two Euler angles.
+ */
+EulerAngles.prototype.add = function (a) {
+  return new EulerAngles(
+    this.heading + a.heading,
+    this.pitch + a.pitch,
+    this.bank + a.bank
+  );
+};
+
+/**
+ * Subtract a Euler angle from the other.
+ * @param {EulerAngles} a Euler angle to subtract.
+ * @return {EulerAngles} Difference between two Euler angles.
+ */
+EulerAngles.prototype.subtract = function (a) {
+  return new EulerAngles(
+    this.heading - a.heading,
+    this.pitch - a.pitch,
+    this.bank - a.bank
+  );
+};
+
+/**
+ * Multiplies a Euler angle by a scalar.
+ * @param {Number} a Specifies the scalar factor.
+ * @return {EulerAngles} The Euler angle scaled by the scalar.
+ */
+EulerAngles.prototype.multiply = function (a) {
+  return new EulerAngles(
+    this.heading * a,
+    this.pitch * a,
+    this.bank * a
+  );
+};
+
+/**
+ * Divides a Euler angle by a scalar.
+ * @param {Number} a Specifies the scalar factor.
+ * @return {EulerAngles} The Euler angle divided by the scalar.
+ * @warning An attempt to pass zero into this operator will
+ *          result in a divide-by-zero error.
+ */
+EulerAngles.prototype.divide = function (a) {
+  return new EulerAngles(
+    this.heading / a,
+    this.pitch / a,
+    this.bank / a
+  );
 };
