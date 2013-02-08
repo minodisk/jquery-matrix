@@ -59,9 +59,16 @@ CSSMatrix.prototype.translate = function (x, y, z) {
   return this;
 };
 
+/**
+ * Returns the result of scaling this matrix by a given vector.
+ * @param scaleX          The x component in the vector.
+ * @param [scaleY=scaleX] The y component in the vector. If undefined, the x component is used.
+ * @param [scaleZ=1]      The z component in the vector. If undefined, 1 is used.
+ * @return {*}            A new matrix that is the result of scaling this matrix.
+ */
 CSSMatrix.prototype.scale = function (scaleX, scaleY, scaleZ) {
   scaleX = scaleX != null ? scaleX : 1;
-  scaleY = scaleY != null ? scaleY : 1;
+  scaleY = scaleY != null ? scaleY : scaleX;
   scaleZ = scaleZ != null ? scaleZ : 1;
 
   __matrix.setupScale(new Vector3(scaleX, scaleY, scaleZ));
@@ -70,17 +77,36 @@ CSSMatrix.prototype.scale = function (scaleX, scaleY, scaleZ) {
   return this;
 };
 
+/**
+ * Returns the result of rotating this matrix by a given vector.
+ * @param rotX     The x component in the vector, in degrees.
+ *                 The z component, if both of rotY and rotZ is undefined.
+ * @param [rotY=0] The y component in the vector, in degrees.
+ * @param [rotZ=0] The z component in the vector, in degrees.
+ * @return {*}
+ */
 CSSMatrix.prototype.rotate = function (rotX, rotY, rotZ) {
-  rotX = rotX != null ? rotX * kPiOver180 : 0;
-  rotY = rotY != null ? rotY * kPiOver180 : 0;
-  rotZ = rotZ != null ? rotZ * kPiOver180 : 0;
+  rotX *= kPiOver180;
+  if (rotY == null && rotZ == null) {
+    rotZ = rotX;
+    rotX = rotY = 0;
+  } else {
+    rotY = rotY != null ? rotY * kPiOver180 : 0;
+    rotZ = rotZ != null ? rotZ * kPiOver180 : 0;
+  }
 
-  __matrix.setupRotateX(rotX);
-  this.concat(__matrix);
-  __matrix.setupRotateY(rotY);
-  this.concat(__matrix);
-  __matrix.setupRotateZ(rotZ);
-  this.concat(__matrix);
+  if (rotX !== 0) {
+    __matrix.setupRotateX(rotX);
+    this.concat(__matrix);
+  }
+  if (rotY !== 0) {
+    __matrix.setupRotateY(rotY);
+    this.concat(__matrix);
+  }
+  if (rotZ !== 0) {
+    __matrix.setupRotateZ(rotZ);
+    this.concat(__matrix);
+  }
 
   return this;
 };
