@@ -14,6 +14,12 @@ var kPiOver180 = kPi / 180
     return child;
   }
   , __matrix
+  , zeroEpsilon = function (n) {
+    if (n > -EPSILON && n < EPSILON) {
+      return 0;
+    }
+    return n;
+  }
   ;
 
 
@@ -39,6 +45,8 @@ function CSSMatrix(transform) {
   }
   CSSMatrix.__super__.constructor.apply(this, arguments);
 }
+
+CSSMatrix.UNIT = new CSSMatrix();
 
 CSSMatrix.prototype.translate = function (x, y, z) {
   x = x != null ? x : 0;
@@ -78,31 +86,39 @@ CSSMatrix.prototype.rotate = function (rotX, rotY, rotZ) {
 };
 
 CSSMatrix.prototype.toString = function () {
-  var components = [
-      this.m11, this.m12, this.m13, 0,
-      this.m21, this.m22, this.m23, 0,
-      this.m31, this.m32, this.m33, 0,
-      this.tx, this.ty, this.tz, 1
-    ]
-    , i, len
+  var m11 = zeroEpsilon(this.m11)
+    , m12 = zeroEpsilon(this.m12)
+    , m13 = zeroEpsilon(this.m13)
+    , m21 = zeroEpsilon(this.m21)
+    , m22 = zeroEpsilon(this.m22)
+    , m23 = zeroEpsilon(this.m23)
+    , m31 = zeroEpsilon(this.m31)
+    , m32 = zeroEpsilon(this.m32)
+    , m33 = zeroEpsilon(this.m33)
+    , tx = zeroEpsilon(this.tx)
+    , ty = zeroEpsilon(this.ty)
+    , tz = zeroEpsilon(this.tz)
     ;
-  for (i = 0, len = components.length; i < len; i++) {
-    if (components[i] > -EPSILON && components[i] < EPSILON) {
-      components[i] = 0;
-    }
+  if (m13 === 0
+    && m23 === 0
+    && m31 === 0 && m32 === 0 && m33 === 1
+    && tz === 0) {
+    return 'matrix(' +
+      [
+        m11, m12,
+        m21, m22,
+        tx, ty
+      ].join(', ') +
+      ')';
   }
-//  if (this.m13 === 0
-//    && this.m23 === 0
-//    && this.m31 === 0 && this.m32 === 0 && this.m33 === 1
-//    && this.tz === 0) {
-//    components = [
-//      this.m11, this.m12,
-//      this.m21, this.m22,
-//      this.tx, this.ty
-//    ];
-//    return 'matrix(' + components.join(', ') + ')';
-//  }
-  return 'matrix3d(' + components.join(', ') + ')';
+  return 'matrix3d(' +
+    [
+      m11, m12, m13, 0,
+      m21, m22, m23, 0,
+      m31, m32, m33, 0,
+      tx, ty, tz, 1
+    ].join(', ') +
+    ')';
 };
 
 __matrix = new CSSMatrix();
