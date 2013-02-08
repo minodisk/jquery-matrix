@@ -1214,11 +1214,11 @@ Quaternion.prototype.pow = function (exponent) {
   result.w = cos(newAlpha);
 
   // Compute new xyz values
-  var mul = sin(newAlpha) / sin(alpha)
+  var mult = sin(newAlpha) / sin(alpha)
     ;
-  result.x = this.x * mul;
-  result.y = this.y * mul;
-  result.z = this.z * mul;
+  result.x = this.x * mult;
+  result.y = this.y * mult;
+  result.z = this.z * mult;
 
   // Return it
   return result;
@@ -1520,6 +1520,9 @@ function Matrix4x3(m11, m12, m13, m21, m22, m23, m31, m32, m33, tx, ty, tz) {
   this.ty = ty != null ? ty : 0;
   this.tz = tz != null ? tz : 0;
 }
+
+
+Matrix4x3.UNIT = new Matrix4x3();
 
 
 /////////////////////////////////////////////////////////////////////////////
