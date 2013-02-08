@@ -62,6 +62,7 @@ var VENDOR = $.browser.webkit ? 'webkit'
     TRANSITION_END: 'webkitTransitionEnd MozTransitionEnd mozTransitionEnd msTransitionEnd oTransitionEnd transitionEnd transitionend'
   }
   , MATRIX_X1 = new CSSMatrix().translate(1).toString()
+  , stop = $.fn.stop
   ;
 
 
@@ -79,7 +80,6 @@ $.extend($.cssHooks, {
       return elem.style[Prop.TRANSFORM];
     },
     set: function (elem, value) {
-      console.log('set transform:', value);
       elem.style[Prop.TRANSFORM] = value;
     }
   },
@@ -88,7 +88,6 @@ $.extend($.cssHooks, {
       return new CSSMatrix(elem.style[Prop.TRANSFORM]);
     },
     set: function (elem, value) {
-      console.log('set matrix:', value, value.toString());
       if (value === '' || value == null) {
         elem.style[Prop.TRANSFORM] = '';
         return;
@@ -158,7 +157,7 @@ $.extend($.cssHooks, {
 });
 
 $.fn.extend({
-  transit    : function (props, duration, easing, callback) {
+  transit: function (props, duration, easing, callback) {
     return this.each(function () {
       var $self = $(this)
         , $dummy = $('<div>')
@@ -174,9 +173,7 @@ $.fn.extend({
         , prop, value
         ;
 
-      $._data(this, 'animate3', {
-        $dummy: $dummy
-      });
+      $._data(this, '$dummy', $dummy);
 
       for (prop in props) {
         if (props.hasOwnProperty(prop)) {
@@ -226,26 +223,27 @@ $.fn.extend({
       }, 0);
     });
   },
-  stopTransit: function () {
+  stop   : function (clearQueue, jumpToEnd) {
     return this.each(function () {
       var $self = $(this)
-        , matrix = new Matrix($self.css(Prop.TRANSFORM))
-        , animate3 = $._data(this, 'animate3')
-        , transform = $._data(this, 'transform')
+        , $dummy = $._data(this, '$dummy')
         ;
-      if (animate3 == null) {
-        return;
+
+      if ($dummy) {
+        $dummy
+          .css('transition', '');
+        if (jumpToEnd) {
+          $dummy.trigger(Event.TRANSITION_END);
+        }
+        $dummy
+          .remove();
+
+        $self
+          .css({
+            transition: '',
+            transform : $self.css('transform')
+          });
       }
-
-      $._data(this, 'matrix', matrix);
-
-      animate3.$dummy.css('transition', '');
-      $self
-        .css({
-          transition: '',
-          transform : matrix
-        });
-      animate3.$dummy.remove();
     });
   }
 });
