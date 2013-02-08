@@ -11,7 +11,7 @@
       'CSSMatrix'
     ]
     , DST = 'lib'
-    , NAME = 'jquery.css3'
+    , NAME = 'jquery.matrix'
 
     , sys = require('sys')
     , fs = require('fs')
