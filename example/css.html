@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>$.fn.css</title>
+  <link rel="stylesheet" href="styles/style.css">
+  <script src="scripts/jquery-1.8.3.min.js"></script>
+  <script src="../lib/jquery.matrix.js"></script>
+  <script>
+    $(function () {
+      $('.container')
+        .css({
+          perspective:500
+        });
+
+      $('#2D .box:contains("translate")')
+        .css({
+          matrix: new CSSMatrix().translate(100, 100)
+        });
+      $('#2D .box:contains("scale")')
+        .css({
+          matrix: new CSSMatrix().scale(0.5, 1.5)
+        });
+      $('#2D .box:contains("rotate")')
+        .css({
+          matrix: new CSSMatrix().rotate(330)
+        });
+
+      $('#3D .box:contains("translate")')
+        .css({
+          matrix: new CSSMatrix().translate(100, 100, 100)
+        });
+      $('#3D .box:contains("scale")')
+        .css({
+          matrix: new CSSMatrix().scale(0.5, 1.5, 0.3)
+        });
+      $('#3D .box:contains("rotate")')
+        .css({
+          matrix: new CSSMatrix().rotate(30, -30, 330)
+        });
+    });
+  </script>
+  <script>
+
+  </script>
+</head>
+<body>
+
+<h1>$.fn.css</h1>
+
+<section id="2D">
+<h2>2D</h2>
+<div class="container"><div class="box">translate</div></div>
+<div class="container"><div class="box">scale</div></div>
+<div class="container"><div class="box">rotate</div></div>
+</section>
+
+<section id="3D">
+<h2>3D</h2>
+<div class="container"><div class="box">translate</div></div>
+<div class="container"><div class="box">scale</div></div>
+<div class="container"><div class="box">rotate</div></div>
+</section>
+
+</body>
+</html>
