@@ -11,9 +11,10 @@ var VENDOR = $.browser.webkit ? 'webkit'
       }
       ;
     return {
+      TRANSFORM_STYLE : join('transform-style'),
+      TRANSFORM_ORIGIN: join('transform-origin'),
       PERSPECTIVE     : join('perspective'),
       TRANSFORM       : join('transform'),
-      TRANSFORM_ORIGIN: join('transform-origin'),
       TRANSITION      : join('transition')
     };
   })()
@@ -67,23 +68,44 @@ var VENDOR = $.browser.webkit ? 'webkit'
 
 
 $.extend($.cssHooks, {
-  perspective: {
-    get: function (elem, computed) {
-      return elem.style[Prop.PERSPECTIVE];
-    },
-    set: function (elem, value) {
-      elem.style[Prop.PERSPECTIVE] = value;
-    }
-  },
-  transform  : {
-    get: function (elem, computed) {
-      return elem.style[Prop.TRANSFORM];
-    },
-    set: function (elem, value) {
-      elem.style[Prop.TRANSFORM] = value;
-    }
-  },
-  matrix     : {
+//  transformStyle : {
+//    get: function (elem, computed) {
+//      return elem.style[Prop.TRANSFORM_STYLE];
+//    },
+//    set: function (elem, value) {
+//      elem.style[Prop.TRANSFORM_STYLE] = value;
+//    }
+//  },
+//  transformOrigin: {
+//    get: function (elem, computed) {
+//      elem.style[Prop.TRANSFORM_ORIGIN];
+//    },
+//    set: function (elem, value) {
+//      if (value === '' || value == null) {
+//        elem.style[Prop.TRANSFORM_ORIGIN] = '';
+//        return;
+//      }
+//
+//      elem.style[Prop.TRANSFORM_ORIGIN] = [value.x + 'px', value.y + 'px'].join(' ');
+//    }
+//  },
+//  perspective    : {
+//    get: function (elem, computed) {
+//      return elem.style[Prop.PERSPECTIVE];
+//    },
+//    set: function (elem, value) {
+//      elem.style[Prop.PERSPECTIVE] = value;
+//    }
+//  },
+//  transform      : {
+//    get: function (elem, computed) {
+//      return elem.style[Prop.TRANSFORM];
+//    },
+//    set: function (elem, value) {
+//      elem.style[Prop.TRANSFORM] = value;
+//    }
+//  },
+  matrix         : {
     get: function (elem, computed) {
       return new CSSMatrix(elem.style[Prop.TRANSFORM]);
     },
@@ -96,20 +118,7 @@ $.extend($.cssHooks, {
       elem.style[Prop.TRANSFORM] = value.toString();
     }
   },
-  origin     : {
-    get: function (elem, computed) {
-      elem.style[Prop.TRANSFORM_ORIGIN];
-    },
-    set: function (elem, value) {
-      if (value === '' || value == null) {
-        elem.style[Prop.TRANSFORM_ORIGIN] = '';
-        return;
-      }
-
-      elem.style[Prop.TRANSFORM_ORIGIN] = [value.x + 'px', value.y + 'px'].join(' ');
-    }
-  },
-  transition : {
+  transition     : {
     get: function (elem, computed) {
       return elem.style[Prop.TRANSITION];
     },
@@ -224,7 +233,7 @@ $.fn.extend({
     });
   },
   stop   : function (clearQueue, jumpToEnd) {
-    return this.each(function () {
+    this.each(function () {
       var $self = $(this)
         , $dummy = $._data(this, '$dummy')
         ;
@@ -245,5 +254,8 @@ $.fn.extend({
           });
       }
     });
+    // call super
+    stop.call(this, clearQueue, jumpToEnd);
+    return this;
   }
 });
